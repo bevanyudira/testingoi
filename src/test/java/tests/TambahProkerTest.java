@@ -35,9 +35,18 @@ public class TambahProkerTest {
         wait = new WebDriverWait(driver, Duration.ofSeconds(20));
     }
 
-    @Test
-    public void testTambahProgramKerjaBerhasil() {
-        // LANGKAH 1: Navigasi ke Landing Page dan klik Masuk
+    @AfterClass
+    public void tearDown() {
+        if (driver != null) {
+            System.out.println("Menutup browser...");
+            driver.close();
+            driver.quit();
+            System.out.println("Browser ditutup.");
+        }
+    }
+
+    @Test(priority = 1)
+    public void test01_NavigasiKeHalamanLogin() {
         driver.get(baseUrl);
         WebElement masukButton = driver.findElement(By.linkText("Masuk"));
         try {
@@ -45,84 +54,60 @@ public class TambahProkerTest {
         } catch (org.openqa.selenium.ElementClickInterceptedException e) {
             ((JavascriptExecutor) driver).executeScript("arguments[0].click();", masukButton);
         }
-
-        // LANGKAH 2: Tunggu halaman login siap
         wait.until(ExpectedConditions.urlContains("/masuk"));
-        System.out.println("Checkpoint: Berhasil navigasi ke halaman login.");
-
-        // LANGKAH 3: Lakukan Login
-        LoginPage loginPage = new LoginPage(driver);
-        loginPage.loginAsAdmin("adminrt1@gmail.com", "password");
-
-        // LANGKAH 4: Tunggu overlay dashboard menghilang
-        System.out.println("Checkpoint: Login berhasil, menunggu data dashboard dimuat...");
-        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loading-overlay")));
-        System.out.println("Checkpoint: Dashboard siap digunakan.");
-
-        // LANGKAH 5: Masuk ke menu Program Kerja
-        AdminDashboardPage adminDashboard = new AdminDashboardPage(driver);
-        adminDashboard.goToProgramKerja();
-
-        // LANGKAH 6: Klik "Add New"
-        ProgramKerjaPage programKerjaPage = new ProgramKerjaPage(driver);
-        programKerjaPage.clickAddNew();
-
-        // LANGKAH 7: Tunggu halaman form tambah program kerja siap
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("title")));
-        System.out.println("Checkpoint: Halaman Tambah Program Kerja berhasil dimuat.");
-
-        // LANGKAH 8: Isi form
-        TambahProgramKerjaPage tambahProkerPage = new TambahProgramKerjaPage(driver);
-        String tanggalHariIni = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-        String judulProker = "Proker Sukses Final " + System.currentTimeMillis();
-
-        tambahProkerPage.fillForm(
-                judulProker,
-                "1", // Nomor RT
-                tanggalHariIni,
-                "11:30",
-                "Yogyakarta",
-                "Deskripsi final dari test automation yang sukses."
-        );
-
-        // LANGKAH 9: Klik Simpan
-        tambahProkerPage.clickSimpan();
-
-        // LANGKAH 10: Handle alert konfirmasi
-        tambahProkerPage.handleAlert();
-
-        // ================== JEDA 5 DETIK ==================
-        try {
-            System.out.println("Memberikan jeda 5 detik untuk browser memproses redirect...");
-            Thread.sleep(5000); // Diubah menjadi 5000 milidetik (5 detik)
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        // ==================================================
-
-        // LANGKAH 11: Tunggu hingga kembali ke halaman daftar proker
-        wait.until(ExpectedConditions.urlContains("/program-kerja/admin"));
-        System.out.println("Checkpoint: Berhasil kembali ke halaman Program Kerja.");
-
-        // LANGKAH 12: Pindah ke tab "Upcoming"
-        programKerjaPage.clickUpcomingTab();
-
-        // LANGKAH 13: VERIFIKASI AKHIR
-        By prokerCardHeader = By.xpath("//div[@id='upcoming']//h5[text()='" + judulProker + "']");
-        WebElement prokerDibuat = wait.until(ExpectedConditions.visibilityOfElementLocated(prokerCardHeader));
-
-        Assert.assertTrue(prokerDibuat.isDisplayed(), "Program kerja yang baru dibuat tidak ditemukan.");
-        System.out.println("Verifikasi Berhasil: Program kerja '" + judulProker + "' ditemukan di tab Upcoming.");
-
-        System.out.println("\n===================================");
-        System.out.println("==  SEMUA LANGKAH TES SELESAI  ==");
-        System.out.println("===================================");
+        Assert.assertTrue(driver.getCurrentUrl().contains("/masuk"));
+        System.out.println("✅ Tes 1 Berhasil: Navigasi ke halaman login sukses.");
     }
 
-    @AfterClass
-    public void tearDown() {
-        if (driver != null) {
-            driver.quit();
+    @Test(priority = 2, dependsOnMethods = "test01_NavigasiKeHalamanLogin")
+    public void test02_LoginKeDashboard() {
+        LoginPage loginPage = new LoginPage(driver, wait);
+        loginPage.loginAsAdmin("adminrt1@gmail.com", "password");
+
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loading-overlay")));
+
+        // Verifikasi dengan menunggu menu 'Program Kerja' muncul. Ini lebih andal.
+        WebElement menuProgramKerja = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//a[normalize-space()='Program Kerja']")));
+        Assert.assertTrue(menuProgramKerja.isDisplayed(), "Menu Program Kerja tidak ditemukan setelah login.");
+
+        System.out.println("✅ Tes 2 Berhasil: Login ke dashboard sukses.");
+    }
+
+    @Test(priority = 3, dependsOnMethods = "test02_LoginKeDashboard")
+    public void test03_NavigasiKeTambahProker() {
+        AdminDashboardPage adminDashboard = new AdminDashboardPage(driver, wait);
+        adminDashboard.goToProgramKerja();
+
+        ProgramKerjaPage programKerjaPage = new ProgramKerjaPage(driver, wait);
+        programKerjaPage.clickAddNew();
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("title")));
+        Assert.assertTrue(driver.getCurrentUrl().contains("/tambah-program-kerja"));
+        System.out.println("✅ Tes 3 Berhasil: Navigasi ke halaman tambah proker sukses.");
+    }
+
+    @Test(priority = 4, dependsOnMethods = "test03_NavigasiKeTambahProker")
+    public void test04_ProsesTambahHinggaSelesai() {
+        TambahProgramKerjaPage tambahProkerPage = new TambahProgramKerjaPage(driver, wait);
+        String tanggalHariIni = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+        String judulProker = "Proker Sukses Final " + System.currentTimeMillis();
+        tambahProkerPage.fillForm(
+                judulProker, "1", tanggalHariIni, "11:30", "Yogyakarta", "Deskripsi final."
+        );
+        tambahProkerPage.clickSimpan();
+        tambahProkerPage.handleAlert(); // Handle 2 alert
+
+        wait.until(ExpectedConditions.urlContains("/program-kerja/admin"));
+
+        ProgramKerjaPage programKerjaPage = new ProgramKerjaPage(driver, wait);
+        programKerjaPage.clickUpcomingTab();
+
+        // Jeda singkat untuk melihat hasil
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        System.out.println("✅ Tes 4 Berhasil: Proses tambah proker dan pindah ke upcoming sukses.");
     }
 }

@@ -14,9 +14,10 @@ public class LoginPage {
     private By passwordInput = By.id("floatingPassword");
     private By loginButton = By.xpath("//button[text()='Masuk']");
 
-    public LoginPage(WebDriver driver) {
+    // Diperbarui: Terima WebDriverWait dari luar
+    public LoginPage(WebDriver driver, WebDriverWait wait) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        this.wait = wait;
     }
 
     public void setEmail(String email) {

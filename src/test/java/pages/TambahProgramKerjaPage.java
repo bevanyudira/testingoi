@@ -20,15 +20,16 @@ public class TambahProgramKerjaPage {
     private By deskripsiInput = By.id("description");
     private By simpanButton = By.xpath("//button[normalize-space()='SIMPAN']");
 
-    public TambahProgramKerjaPage(WebDriver driver) {
+    // Diperbarui: Terima WebDriverWait dari luar
+    public TambahProgramKerjaPage(WebDriver driver, WebDriverWait wait) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        this.wait = wait;
     }
 
     public void fillForm(String judul, String rt, String tanggal, String waktu, String lokasi, String deskripsi) {
         System.out.println("Mengisi form Tambah Program Kerja...");
         driver.findElement(judulInput).sendKeys(judul);
-        driver.findElement(rtRwInput).clear(); // Hapus isi default jika ada
+        driver.findElement(rtRwInput).clear();
         driver.findElement(rtRwInput).sendKeys(rt);
         driver.findElement(tanggalInput).sendKeys(tanggal);
         driver.findElement(waktuInput).sendKeys(waktu);
@@ -44,9 +45,16 @@ public class TambahProgramKerjaPage {
         System.out.println("Tombol Simpan berhasil diklik.");
     }
 
+    // Diperbarui: Tangani DUA alert secara berurutan
     public void handleAlert() {
-        System.out.println("Menunggu dan menerima alert konfirmasi...");
+        // Menangani pop-up pertama: Konfirmasi
+        System.out.println("Menunggu dan menerima alert konfirmasi 'Yakin?'...");
         wait.until(ExpectedConditions.alertIsPresent()).accept();
-        System.out.println("Alert diterima.");
+        System.out.println("Alert konfirmasi pertama diterima.");
+
+        // Menangani pop-up kedua: Notifikasi sukses
+        System.out.println("Menunggu dan menerima alert notifikasi 'Berhasil Ditambahkan'...");
+        wait.until(ExpectedConditions.alertIsPresent()).accept();
+        System.out.println("Alert notifikasi kedua diterima.");
     }
 }

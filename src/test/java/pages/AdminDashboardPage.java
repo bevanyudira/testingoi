@@ -12,9 +12,10 @@ public class AdminDashboardPage {
 
     private By programKerjaMenu = By.xpath("//a[normalize-space()='Program Kerja']");
 
-    public AdminDashboardPage(WebDriver driver) {
+    // Diperbarui: Terima WebDriverWait dari luar
+    public AdminDashboardPage(WebDriver driver, WebDriverWait wait) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        this.wait = wait;
     }
 
     public void goToProgramKerja() {

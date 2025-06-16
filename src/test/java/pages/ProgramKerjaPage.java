@@ -10,17 +10,13 @@ public class ProgramKerjaPage {
     private WebDriver driver;
     private WebDriverWait wait;
 
-    // Locator untuk tombol "+ ADD NEW"
     private By addNewButton = By.xpath("//button[normalize-space()='+ ADD NEW']");
-
-    // ================== PERBAIKAN LOKATOR DI SINI ==================
-    // Menggunakan CSS Selector untuk menargetkan atribut data-filter
     private By upcomingTab = By.cssSelector("button[data-filter='upcoming']");
-    // ==============================================================
 
-    public ProgramKerjaPage(WebDriver driver) {
+    // Diperbarui: Terima WebDriverWait dari luar
+    public ProgramKerjaPage(WebDriver driver, WebDriverWait wait) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        this.wait = wait;
     }
 
     public void clickAddNew() {
